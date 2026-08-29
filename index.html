@@ -5,24 +5,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Günlük Haberler</title>
   <style>
-    :root{--bg:#f6f7f9;--card:#ffffff;--muted:#6b7280;--accent:#2aa876}
+    :root{--bg:#ffffff;--muted:#6b7280}
     html,body{height:100%}
-    body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:#111}
-    header{padding:18px 24px;background:#fff;border-bottom:1px solid #e6e6e6}
-    main{max-width:980px;margin:20px auto;padding:0 16px}
-    h1{margin:0;font-size:20px;font-weight:600}
-    #last-updated{margin-top:6px;color:var(--muted);font-size:0.9rem}
-    #feed{margin-top:18px}
-    .item{background:var(--card);border-radius:6px;padding:14px 16px;margin:12px 0;box-shadow:0 1px 0 rgba(16,24,40,0.03);display:flex;gap:12px}
-    .accent{width:6px;border-radius:3px;background:linear-gradient(180deg,var(--accent),#1f8f63)}
+    body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;margin:8px;background:var(--bg);color:#111}
+    h1{font-size:16px;margin:6px 0}
+    #last-updated{margin:6px 0;color:var(--muted);font-size:12px}
+    #feed{margin-top:8px}
+    .item{padding:6px 8px;margin:4px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid #eee}
+    .accent{width:4px;height:36px;border-radius:2px}
     .content{flex:1}
-    .title{font-size:15px;margin:0 0 6px 0}
-    .title a{color:#0f172a;text-decoration:none}
-    .meta{color:var(--muted);font-size:0.85rem;margin-bottom:8px}
-    .source{display:inline-block;background:#eefdf6;color:var(--accent);padding:4px 8px;border-radius:999px;font-size:12px;margin-right:8px}
-    .excerpt{color:#374151;font-size:0.95rem}
+    .title{font-size:13px;margin:0}
+    .title a{color:#0b1220;text-decoration:none}
+    .meta{color:var(--muted);font-size:11px}
+    .source{display:inline-block;padding:2px 6px;border-radius:6px;font-size:11px;margin-right:8px}
 
-    @media (max-width:640px){ main{padding:0 12px} .item{padding:12px} }
+    @media (max-width:640px){ body{margin:6px} .item{padding:6px} }
   </style>
 </head>
 <body>
@@ -43,6 +40,17 @@
     const header = document.querySelector('h1');
     header.insertAdjacentElement('afterend', controls);
 
+    function colorForKeyword(k){
+      // deterministic hue from string
+      if(!k) return {accent:'#ddd',bg:'#f6f6f6',text:'#111'};
+      let h=0; for(let i=0;i<k.length;i++){ h = (h*31 + k.charCodeAt(i)) % 360; }
+      const hue = h;
+      const accent = `hsl(${hue} 70% 45%)`;
+      const badgeBg = `hsl(${hue} 90% 94%)`;
+      const badgeText = `hsl(${hue} 60% 25%)`;
+      return {accent,bg:badgeBg,text:badgeText};
+    }
+
     function renderItems(items, keywordFilter){
       container.innerHTML = '';
       const filtered = keywordFilter ? items.filter(it=>{
@@ -53,22 +61,18 @@
       filtered.forEach(it=>{
         const title = it.getElementsByTagName('title')[0]?.textContent || 'No title';
         const link = it.getElementsByTagName('link')[0]?.textContent || '#';
-        const desc = it.getElementsByTagName('description')[0]?.textContent || '';
         const pub = it.getElementsByTagName('pubDate')[0]?.textContent || '';
-        // derive source from link hostname
-        let source = '';
-        try{ source = new URL(link).hostname.replace(/^www\./,''); }catch(e){ source = '' }
-        // decode HTML entities in description and make a short excerpt
-        const decodedDesc = new DOMParser().parseFromString(desc,'text/html').body.textContent || '';
-        const excerpt = decodedDesc.length>240 ? decodedDesc.slice(0,240)+'…' : decodedDesc;
+        // derive keyword from title tag like [Keyword]
+        const kwMatch = title.match(/^\[([^\]]+)\]/);
+        const kw = kwMatch ? kwMatch[1] : '';
+        const colors = colorForKeyword(kw);
 
         const el = document.createElement('div'); el.className='item';
         el.innerHTML = `
-          <div class="accent" aria-hidden></div>
+          <div class="accent" aria-hidden style="background:${colors.accent}"></div>
           <div class="content">
-            <div class="meta"><span class="source">${source}</span><span>${pub}</span></div>
-            <h3 class="title"><a href="${link}" target="_blank">${title}</a></h3>
-            <div class="excerpt">${excerpt}</div>
+            <div class="meta"><span class="source" style="background:${colors.bg};color:${colors.text}">${kw || ''}</span><span style="margin-left:8px">${pub}</span></div>
+            <h3 class="title"><a href="${link}" target="_blank">${title.replace(/^\[[^\]]+\]\s*/,'')}</a></h3>
           </div>`;
         container.appendChild(el);
       });
