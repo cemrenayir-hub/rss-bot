@@ -69,35 +69,35 @@ def fetch_and_generate_rss():
             google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}"
             feed = feedparser.parse(google_news_url)
 
-                # Apply per-keyword cap if configured
-                cap = None
-                try:
-                    with open(config_path, 'r', encoding='utf-8') as cf_cap:
-                        cap = int(json.load(cf_cap).get('rss_filter_config', {}).get('per_keyword_cap', 0))
-                except Exception:
-                    cap = 0
+            # Apply per-keyword cap if configured
+            cap = None
+            try:
+                with open(config_path, 'r', encoding='utf-8') as cf_cap:
+                    cap = int(json.load(cf_cap).get('rss_filter_config', {}).get('per_keyword_cap', 0))
+            except Exception:
+                cap = 0
 
-                entries_to_iterate = feed.entries if not cap or cap <= 0 else feed.entries[:cap]
+            entries_to_iterate = feed.entries if not cap or cap <= 0 else feed.entries[:cap]
 
-                # Fetch capped articles returned by the search
-                for entry in entries_to_iterate:
-                    link = getattr(entry, 'link', None)
-                    if not link or link in seen_links:
-                        continue
-                    seen_links.add(link)
+            # Fetch capped articles returned by the search
+            for entry in entries_to_iterate:
+                link = getattr(entry, 'link', None)
+                if not link or link in seen_links:
+                    continue
+                seen_links.add(link)
 
-                    title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
-                    desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or 'Açıklama bulunamadı.')
-                    pub_date = None
-                    if hasattr(entry, 'published_parsed'):
-                        try:
-                            pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-                        except Exception:
-                            pub_date = None
-                    candidates.append({
-                        'link': link,
-                        'title': title,
-                        'desc': desc,
+                title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
+                desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or 'Açıklama bulunamadı.')
+                pub_date = None
+                if hasattr(entry, 'published_parsed'):
+                    try:
+                        pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                    except Exception:
+                        pub_date = None
+                candidates.append({
+                    'link': link,
+                    'title': title,
+                    'desc': desc,
                         'pub_date': pub_date,
                         'category': cat_name
                     })
