@@ -64,6 +64,9 @@
     "follow_urls": [
 
     ],
-    "search_both_languages": true
+    "search_both_languages": true,
+    "dedupe_threshold": 0.85,
+    "dedupe_keep": "earliest",
+    "per_keyword_cap": 50
   }
 }

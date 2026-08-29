@@ -83,8 +83,18 @@ def fetch_and_generate_rss():
                 google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl={l_hl}&gl={l_gl}&ceid={l_ceid}"
                 feed = feedparser.parse(google_news_url)
 
-                # Fetch all available articles returned by the search (no hard limit)
-                for entry in feed.entries:
+                # Apply per-keyword cap if configured
+                cap = None
+                try:
+                    with open(config_path, 'r', encoding='utf-8') as cf_cap:
+                        cap = int(json.load(cf_cap).get('rss_filter_config', {}).get('per_keyword_cap', 0))
+                except Exception:
+                    cap = 0
+
+                entries_to_iterate = feed.entries if not cap or cap <= 0 else feed.entries[:cap]
+
+                # Fetch capped articles returned by the search
+                for entry in entries_to_iterate:
                     link = getattr(entry, 'link', None)
                     if not link or link in seen_links:
                         continue

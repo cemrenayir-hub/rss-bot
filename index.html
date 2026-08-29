@@ -4,22 +4,34 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Ekoloji Haber Servisi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#ffffff;--muted:#6b7280}
+    :root{
+      --bg:#f6f7f9; --card:#ffffff; --muted:#6b7280; --text:#0b1220; --muted-2:#9aa0a6
+    }
     html,body{height:100%}
-    body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;margin:8px;background:var(--bg);color:#111}
-    h1{font-size:16px;margin:6px 0}
-    #last-updated{margin:6px 0;color:var(--muted);font-size:12px}
-    #feed{margin-top:8px}
-    .item{padding:6px 8px;margin:4px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid #eee}
-    .accent{width:4px;height:36px;border-radius:2px}
-    .content{flex:1}
-    .title{font-size:13px;margin:0}
-    .title a{color:#0b1220;text-decoration:none}
-    .meta{color:var(--muted);font-size:11px}
-    .source{display:inline-block;padding:2px 6px;border-radius:6px;font-size:11px;margin-right:8px}
+    body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;margin:16px;background:var(--bg);color:var(--text);line-height:1.45}
+    .app{max-width:900px;margin:6px auto}
+    h1{font-size:20px;margin:6px 0;font-weight:600}
+    #last-updated{margin:6px 0;color:var(--muted);font-size:13px}
+    #feed{margin-top:12px}
 
-    @media (max-width:640px){ body{margin:6px} .item{padding:6px} }
+    .item{background:var(--card);padding:10px 12px;margin:8px 0;display:flex;align-items:flex-start;gap:12px;border-radius:8px;box-shadow:0 1px 3px rgba(16,24,40,0.04);border:1px solid rgba(16,24,40,0.03)}
+    .accent{width:6px;height:56px;border-radius:6px;flex-shrink:0}
+    .content{flex:1}
+    .title{font-size:15px;margin:0 0 6px 0}
+    .title a{color:var(--text);text-decoration:none}
+    .meta{color:var(--muted);font-size:12px}
+    .source{display:inline-block;padding:4px 8px;border-radius:12px;font-size:12px;margin-right:8px}
+
+    #controls{display:flex;align-items:center;gap:12px;margin:10px 0}
+    #category-stats span{opacity:0.95}
+
+    /* dark mode */
+    body.dark{ --bg:#0b1220; --card:#07101a; --muted:#94a3b8; --text:#e6eef8 }
+    body.dark .item{box-shadow:0 2px 8px rgba(2,6,23,0.5);border:1px solid rgba(255,255,255,0.03)}
+
+    @media (max-width:640px){ body{margin:10px} .item{padding:8px} }
   </style>
 </head>
 <body>
@@ -32,13 +44,22 @@
 
     // create filter controls
     const controls = document.createElement('div');
+    controls.id = 'controls';
     controls.style.margin = '12px 0';
     controls.innerHTML = `
       <label style="font-size:0.95rem;color:var(--muted);">Kategori: </label>
-      <select id="category-filter" style="margin-left:8px;padding:6px;border-radius:6px;border:1px solid #e6e6e6"></select>
+      <select id="category-filter" style="margin-left:8px;padding:8px;border-radius:8px;border:1px solid rgba(16,24,40,0.05);background:var(--card)"></select>
+      <button id="dark-toggle" style="margin-left:8px;padding:8px;border-radius:8px;border:1px solid rgba(16,24,40,0.05);background:transparent;cursor:pointer">Karanlık</button>
     `;
     const header = document.querySelector('h1');
     header.insertAdjacentElement('afterend', controls);
+
+    // dark mode toggle
+    const darkToggle = controls.querySelector('#dark-toggle');
+    darkToggle.addEventListener('click', ()=>{
+      document.body.classList.toggle('dark');
+      darkToggle.textContent = document.body.classList.contains('dark') ? 'Açık' : 'Karanlık';
+    });
 
     function colorForKeyword(k){
       // deterministic hue from string
