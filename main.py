@@ -46,8 +46,15 @@ def fetch_and_generate_rss():
                             loaded.append({'name': name, 'hl': hl, 'gl': gl, 'ceid': ceid, 'keywords': kws_norm})
                     if loaded:
                         categories = loaded
+                # load follow_urls (optional)
+                follow_urls = cfg.get('rss_filter_config', {}).get('follow_urls', [])
+                if not isinstance(follow_urls, list):
+                    follow_urls = []
         except Exception as e:
             print('Failed to load rss_filter_config.json:', e)
+            follow_urls = []
+    else:
+        follow_urls = []
 
     seen_links = set()
 
@@ -82,6 +89,47 @@ def fetch_and_generate_rss():
                 if hasattr(entry, 'published_parsed'):
                     pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
                     fe.published(pub_date)
+
+    # Process follow_urls (optional) — accept list of strings or objects {url, category}
+    for fu in (follow_urls or []):
+        if isinstance(fu, dict):
+            url = str(fu.get('url', '')).strip()
+            cat_name = str(fu.get('category', '')).strip() or 'Followed'
+        else:
+            url = str(fu).strip()
+            cat_name = 'Followed'
+        if not url:
+            continue
+        try:
+            feed = feedparser.parse(url)
+        except Exception:
+            feed = None
+        if feed and getattr(feed, 'entries', None):
+            for entry in feed.entries:
+                link = getattr(entry, 'link', None)
+                if not link or link in seen_links:
+                    continue
+                seen_links.add(link)
+                fe = fg.add_entry()
+                fe.id(link)
+                title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
+                fe.title(f"[{cat_name}] {title}")
+                fe.link(href=link)
+                desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or '')
+                fe.description(desc)
+                if hasattr(entry, 'published_parsed'):
+                    pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                    fe.published(pub_date)
+        else:
+            # fallback: include the URL as a single entry
+            if url in seen_links:
+                continue
+            seen_links.add(url)
+            fe = fg.add_entry()
+            fe.id(url)
+            fe.title(f"[{cat_name}] {url}")
+            fe.link(href=url)
+            fe.description('Followed URL (no feed entries).')
 
     # Save the output file explicitly as UTF-8 to avoid encoding issues
     rss_bytes = fg.rss_str(pretty=True)
