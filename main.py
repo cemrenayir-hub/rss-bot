@@ -16,47 +16,72 @@ def fetch_and_generate_rss():
     fg.subtitle('Belirlenen konularda en güncel haber akışı.')
     fg.language('tr')
 
-    # Load keywords from config if available; fallback to a short default
+    # Load categories from config if available; fallback to a single default category
     config_path = os.path.join(os.path.dirname(__file__), 'rss_filter_config.json')
-    default_keywords = ["Yapay Zeka", "Yazılım Geliştirme", "Ekonomi", "Teknoloji"]
-    keywords = default_keywords
+    categories = [
+        {
+            'name': 'Default',
+            'hl': 'tr',
+            'gl': 'TR',
+            'ceid': 'TR:tr',
+            'keywords': ["Yapay Zeka", "Yazılım Geliştirme", "Ekonomi", "Teknoloji"]
+        }
+    ]
     if os.path.exists(config_path):
         try:
             with open(config_path, 'r', encoding='utf-8') as cf:
                 cfg = json.load(cf)
-                kws = cfg.get('rss_filter_config', {}).get('keywords')
-                if isinstance(kws, list) and kws:
-                    # normalize unicode and strip whitespace
-                    keywords = [unicodedata.normalize('NFC', str(k).strip()) for k in kws]
+                cats = cfg.get('rss_filter_config', {}).get('categories')
+                if isinstance(cats, list) and cats:
+                    # normalize keywords in each category
+                    loaded = []
+                    for c in cats:
+                        name = str(c.get('name', '')).strip() or 'Category'
+                        hl = str(c.get('hl', 'en'))
+                        gl = str(c.get('gl', 'US'))
+                        ceid = str(c.get('ceid', f'{gl}:{hl}'))
+                        kws = c.get('keywords', []) if isinstance(c.get('keywords', []), list) else []
+                        kws_norm = [unicodedata.normalize('NFC', str(k).strip()) for k in kws if str(k).strip()]
+                        if kws_norm:
+                            loaded.append({'name': name, 'hl': hl, 'gl': gl, 'ceid': ceid, 'keywords': kws_norm})
+                    if loaded:
+                        categories = loaded
         except Exception as e:
             print('Failed to load rss_filter_config.json:', e)
 
     seen_links = set()
 
-    for keyword in keywords:
-        # restrict results to the past 7 days
-        search_query = f"{keyword} when:7d"
-        encoded_keyword = urllib.parse.quote(search_query)
-        google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl=tr&gl=TR&ceid=TR:tr"
-        feed = feedparser.parse(google_news_url)
+    # Iterate categories and their keywords; label entries by category name
+    for cat in categories:
+        cat_name = cat.get('name', 'Category')
+        hl = cat.get('hl', 'en')
+        gl = cat.get('gl', 'US')
+        ceid = cat.get('ceid', f'{gl}:{hl}')
+        for keyword in cat.get('keywords', []):
+            # restrict results to the past 7 days
+            search_query = f"{keyword} when:7d"
+            encoded_keyword = urllib.parse.quote(search_query)
+            google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl={hl}&gl={gl}&ceid={ceid}"
+            feed = feedparser.parse(google_news_url)
 
-        # Fetch all available articles returned by the search (no hard limit)
-        for entry in feed.entries:
-            if getattr(entry, 'link', None) in seen_links:
-                continue
-            seen_links.add(getattr(entry, 'link', None))
+            # Fetch all available articles returned by the search (no hard limit)
+            for entry in feed.entries:
+                link = getattr(entry, 'link', None)
+                if not link or link in seen_links:
+                    continue
+                seen_links.add(link)
 
-            fe = fg.add_entry()
-            fe.id(getattr(entry, 'link', ''))
-            title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
-            fe.title(f"[{keyword}] {title}")
-            fe.link(href=getattr(entry, 'link', ''))
-            desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or 'Açıklama bulunamadı.')
-            fe.description(desc)
+                fe = fg.add_entry()
+                fe.id(link)
+                title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
+                fe.title(f"[{cat_name}] {title}")
+                fe.link(href=link)
+                desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or 'Açıklama bulunamadı.')
+                fe.description(desc)
 
-            if hasattr(entry, 'published_parsed'):
-                pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-                fe.published(pub_date)
+                if hasattr(entry, 'published_parsed'):
+                    pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                    fe.published(pub_date)
 
     # Save the output file explicitly as UTF-8 to avoid encoding issues
     rss_bytes = fg.rss_str(pretty=True)
