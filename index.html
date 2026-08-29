@@ -34,8 +34,8 @@
     const controls = document.createElement('div');
     controls.style.margin = '12px 0';
     controls.innerHTML = `
-      <label style="font-size:0.95rem;color:var(--muted);">Filtre: </label>
-      <select id="keyword-filter" style="margin-left:8px;padding:6px;border-radius:6px;border:1px solid #e6e6e6"></select>
+      <label style="font-size:0.95rem;color:var(--muted);">Kategori: </label>
+      <select id="category-filter" style="margin-left:8px;padding:6px;border-radius:6px;border:1px solid #e6e6e6"></select>
     `;
     const header = document.querySelector('h1');
     header.insertAdjacentElement('afterend', controls);
@@ -84,7 +84,7 @@
     }
 
     function populateFilter(items){
-      const sel = document.getElementById('keyword-filter');
+      const sel = document.getElementById('category-filter');
       sel.innerHTML = '';
       const optAll = document.createElement('option'); optAll.value = ''; optAll.textContent = 'Tümü'; sel.appendChild(optAll);
       const keys = new Set();
@@ -128,7 +128,7 @@
 
     // Initial load and periodic refresh
     loadFeedRaw().then(items=>{ populateFilter(items); renderItems(items); }).catch(e=>{ console.error('initial load failed', e); container.textContent = 'Yükleme hatası: '+e.message });
-    setInterval(()=>{ const sel = document.getElementById('keyword-filter'); const v = sel ? sel.value : ''; loadAndRender(v).catch(e=>{ console.error('refresh failed', e); container.textContent = 'Yükleme hatası: '+e.message; }); }, REFRESH_MS);
+    setInterval(()=>{ const sel = document.getElementById('category-filter'); const v = sel ? sel.value : ''; loadAndRender(v).catch(e=>{ console.error('refresh failed', e); container.textContent = 'Yükleme hatası: '+e.message; }); }, REFRESH_MS);
   </script>
 </body>
 </html>
