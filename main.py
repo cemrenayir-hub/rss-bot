@@ -62,6 +62,7 @@ def fetch_and_generate_rss():
         search_both = False
 
     # Collect candidate entries first so we can deduplicate similar items across sources
+    seen_links = set()
     candidates = []
 
     # Iterate categories and their keywords; label entries by category name
