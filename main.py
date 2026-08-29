@@ -12,6 +12,7 @@ import unicodedata
 if sys.platform.startswith('win'):
     sys.stdout.reconfigure(encoding='utf-8')
 
+
 def fetch_and_generate_rss(debug=False):
     fg = FeedGenerator()
     fg.id('https://cemrenayir-hub.github.io/rss-bot/gunluk_haberler.xml')
@@ -52,8 +53,8 @@ def fetch_and_generate_rss(debug=False):
                     loaded = []
                     for c in cats:
                         name = str(c.get('name', '')).strip() or 'Category'
-                        hl = str(c.get('hl', 'en'))
-                        gl = str(c.get('gl', 'US'))
+                        hl = str(c.get('hl', 'tr'))
+                        gl = str(c.get('gl', 'TR'))
                         ceid = str(c.get('ceid', f'{gl}:{hl}'))
                         kws = c.get('keywords', []) if isinstance(c.get('keywords', []), list) else []
                         kws_norm = [unicodedata.normalize('NFC', str(k).strip()) for k in kws if str(k).strip()]
@@ -71,6 +72,9 @@ def fetch_and_generate_rss(debug=False):
             print('Failed to load rss_filter_config.json:', e)
             follow_urls = []
             search_both = False
+    else:
+        follow_urls = []
+        search_both = False
 
     # Collect candidate entries first so we can deduplicate similar items across sources
     seen_links = set()
@@ -79,8 +83,8 @@ def fetch_and_generate_rss(debug=False):
     # Iterate categories and their keywords; label entries by category name
     for cat in categories:
         cat_name = cat.get('name', 'Category')
-        hl = cat.get('hl', 'en')
-        gl = cat.get('gl', 'US')
+        hl = cat.get('hl', 'tr')
+        gl = cat.get('gl', 'TR')
         ceid = cat.get('ceid', f'{gl}:{hl}')
         for keyword in cat.get('keywords', []):
             # restrict results to the past 7 days
@@ -166,7 +170,6 @@ def fetch_and_generate_rss(debug=False):
                     'category': cat_name
                 })
         else:
-            # fallback: include the URL as a single entry
             if url in seen_links:
                 continue
             seen_links.add(url)
@@ -178,10 +181,23 @@ def fetch_and_generate_rss(debug=False):
                 'category': cat_name
             })
 
+    # Normalize pub_date to timezone-aware UTC when present
+    for c in candidates:
+        pd = c.get('pub_date')
+        if pd is None:
+            continue
+        try:
+            if getattr(pd, 'tzinfo', None) is None:
+                pd = pd.replace(tzinfo=timezone.utc)
+            else:
+                pd = pd.astimezone(timezone.utc)
+            c['pub_date'] = pd
+        except Exception:
+            c['pub_date'] = pd
+
     # Use AI assistant (or local heuristics) to filter relevance and merge duplicates
     try:
         from ai_assistant import filter_relevant_and_merge_duplicates
-        # build a flattened keyword list from categories
         flattened_keywords = []
         for cat in categories:
             for k in cat.get('keywords', []):
@@ -198,16 +214,14 @@ def fetch_and_generate_rss(debug=False):
         unique_entries = filtered_candidates
     except Exception as e:
         print('AI assistant filtering failed, falling back to local dedupe:', e)
-        # Deduplicate similar items server-side using title+description similarity
+        # Local difflib-based dedupe
         try:
             import difflib, re
 
             def normalize_for_compare(s):
                 s = unicodedata.normalize('NFD', s or '')
-                # remove diacritics
                 s = ''.join(ch for ch in s if not unicodedata.combining(ch))
                 s = s.lower()
-                # remove punctuation
                 s = re.sub(r"[^\w\s]", ' ', s)
                 s = re.sub(r"\s+", ' ', s).strip()
                 return s
@@ -228,9 +242,9 @@ def fetch_and_generate_rss(debug=False):
 
             # sort to prefer earliest when keeping earliest
             if dedupe_keep == 'earliest':
-                candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.max)
+                candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.max.replace(tzinfo=timezone.utc))
             else:
-                candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.min, reverse=True)
+                candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
 
             keep = []
             skipped = [False]*len(candidates)
@@ -253,7 +267,6 @@ def fetch_and_generate_rss(debug=False):
 
     # Order entries newest first
     try:
-        # treat missing pub_date as very old so they appear last
         epoch = datetime(1970,1,1, tzinfo=timezone.utc)
         unique_entries.sort(key=lambda x: x.get('pub_date') or epoch, reverse=True)
     except Exception:

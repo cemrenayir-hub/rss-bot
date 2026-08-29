@@ -1,72 +1,121 @@
 {
   "rss_filter_config": {
-    "name": "Ecology & Climate Crisis News Filter",
-    "description": "Two categories: English and Turkish keywords.",
+    "name": "Ecosocialist / Marxist Ecology Filter",
+    "description": "Curated bilingual categories for Marxist, ecosocialist, and related ecology content. Categories balance relevance and run-time.",
     "match_type": "any",
     "categories": [
       {
-        "name": "English",
-        "hl": "en",
-        "gl": "US",
-        "ceid": "US:en",
+        "name": "Ecosocialism & Theory",
         "keywords": [
-          "climate change",
-          "global warming",
-          "environmental pollution",
-          "biodiversity loss",
-          "sustainability",
-          "renewable energy",
-          "green economy",
-          "circular economy",
-          "carbon emissions",
-          "net zero",
-          "extreme weather",
-          "deforestation",
-          "water scarcity",
-          "climate crisis",
-          "climate emergency",
-          "environmental science",
-          "eco friendly",
-          "solar power",
-          "wind power",
-          "clean energy"
+          "ecosocialism",
+          "ecosocialist",
+          "eco-socialism",
+          "ekososyalizm",
+          "ekososyalist",
+          "green socialism",
+          "yeşil sosyalizm",
+          "Marxist ecology",
+          "Marksist ekoloji",
+          "Marxist environmentalism",
+          "Marksist çevrecilik",
+          "social ecology",
+          "sosyal ekoloji"
         ]
       },
       {
-        "name": "Turkish",
-        "hl": "tr",
-        "gl": "TR",
-        "ceid": "TR:tr",
+        "name": "Climate Justice & Movements",
         "keywords": [
-          "iklim değişikliği",
-          "küresel ısınma",
+          "climate justice",
+          "iklim adaleti",
+          "environmental justice",
+          "çevre adaleti",
+          "just transition",
+          "adil dönüşüm",
+          "climate reparations",
+          "iklim tazminatı",
+          "fossil fuel divestment",
+          "fosil yakıt tasfiye",
+          "anti-capitalist climate",
+          "antikapitalist iklim"
+        ]
+      },
+      {
+        "name": "Energy & Fossil Fuels",
+        "keywords": [
+          "fossil fuels",
+          "fosil yakıt",
+          "phase out fossil fuels",
+          "fosil yakıttan çıkış",
+          "divestment",
+          "nationalize energy",
+          "energy nationalization",
+          "enerji kamulaştırması",
+          "public ownership energy",
+          "renewable transition"
+        ]
+      },
+      {
+        "name": "Labor, Workers & Transition",
+        "keywords": [
+          "just transition for workers",
+          "işçi-çevre",
+          "worker-environment",
+          "workers' control",
+          "işçi kontrolü",
+          "labor and environment",
+          "işçi hakları"
+        ]
+      },
+      {
+        "name": "Agriculture & Land",
+        "keywords": [
+          "agroecology",
+          "agroekoloji",
+          "food sovereignty",
+          "gıda egemenliği",
+          "land justice",
+          "toprak adaleti",
+          "peasant",
+          "köylü"
+        ]
+      },
+      {
+        "name": "Commons & Solidarity Economy",
+        "keywords": [
+          "commons",
+          "ortak mallar",
+          "mutual aid",
+          "karşılıklı yardım",
+          "solidarity economy",
+          "dayanışma ekonomisi",
+          "cooperative",
+          "kooperatif"
+        ]
+      },
+      {
+        "name": "Extractivism & Critique",
+        "keywords": [
+          "extractivism",
+          "ekstraktivizm",
+          "extractive industries",
+          "çıkarcılık",
+          "mining",
+          "madencilik",
+          "pollution",
           "çevre kirliliği",
-          "doğa haberleri",
-          "iklim krizi",
-          "ekolojik denge",
-          "sürdürülebilirlik",
-          "yenilenebilir enerji",
-          "temiz enerji",
-          "karbon ayak izi",
-          "su tasarrufu",
-          "sıfır atık",
-          "geri dönüşüm",
-          "kuraklık",
-          "hava kirliliği",
-          "aşırı hava olayları",
-          "su kıtlığı",
-          "orman yangınları",
-          "biyoçeşitlilik",
-          "çevre kirliliği çeşitleri"
+          "environmental destruction",
+          "çevre tahribatı"
         ]
       }
     ],
     "follow_urls": [
-
+      "https://www.evrensel.net/kategori/13/cevre",
+      "https://www.birgun.net/etiket/ekoloji-127",
+      "https://www.birgun.net/kategori/cevre-15",
+      "https://jinnews.net/EKOLOJ"
     ],
-    "search_both_languages": true,
-    "dedupe_threshold": 0.85,
+    "dedupe_threshold": 0.82,
     "dedupe_keep": "earliest",
-    "per_keyword_cap": 50
+    "per_keyword_cap": 30
   }
 }
