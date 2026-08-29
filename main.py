@@ -2,6 +2,10 @@ import feedparser
 from feedgen.feed import FeedGenerator
 import urllib.parse
 from datetime import datetime, timezone
+import json
+import os
+import unicodedata
+
 
 def fetch_and_generate_rss():
     fg = FeedGenerator()
@@ -12,9 +16,21 @@ def fetch_and_generate_rss():
     fg.subtitle('Belirlenen konularda en güncel haber akışı.')
     fg.language('tr')
 
-    keywords = [
-        "iklim adaleti", "ekolojik yıkım", "sermaye ve doğa talanı", "politik ekoloji", "müştereklerin savunulması", "yeşil badana", "yeşil boyama", "iklimi değil sistemi değiştir", "ekolojik kırım", "eko-kırım", "ekofeminizm", "gıda egemenliği", "agroekoloji", "iklim mültecileri", "eko-anksiyete", "yerel ekoloji direnişleri", "ÇED raporu iptali", "yaşam alanlarının savunulması", "acele kamulaştırma kararı", "köylülerin doğa nöbeti", "çevre mitingi", "çevre davaları", "ekoloji örgütleri", "çevre platformu", "maden şirketleri doğa katliamı", "siyanürlü altın madeni", "HES projeleri zararları", "JES protestoları", "RES protestoları", "ağaç kıyımı", "orman kıyımı", "nükleer çöplük", "termik santral protestoları", "taş ocakları doğa katliamı", "rant odaklı çevre politikaları", "iklim kanunu eleştirileri", "karbon ticareti eleştirisi", "talan politikaları", "imara açılan sit alanları"
-    ]
+    # Load keywords from config if available; fallback to a short default
+    config_path = os.path.join(os.path.dirname(__file__), 'rss_filter_config.json')
+    default_keywords = ["Yapay Zeka", "Yazılım Geliştirme", "Ekonomi", "Teknoloji"]
+    keywords = default_keywords
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as cf:
+                cfg = json.load(cf)
+                kws = cfg.get('rss_filter_config', {}).get('keywords')
+                if isinstance(kws, list) and kws:
+                    # normalize unicode and strip whitespace
+                    keywords = [unicodedata.normalize('NFC', str(k).strip()) for k in kws]
+        except Exception as e:
+            print('Failed to load rss_filter_config.json:', e)
+
     seen_links = set()
 
     for keyword in keywords:
@@ -26,23 +42,36 @@ def fetch_and_generate_rss():
 
         # Fetch all available articles returned by the search (no hard limit)
         for entry in feed.entries:
-            if entry.link in seen_links:
+            if getattr(entry, 'link', None) in seen_links:
                 continue
-            seen_links.add(entry.link)
+            seen_links.add(getattr(entry, 'link', None))
 
             fe = fg.add_entry()
-            fe.id(entry.link)
-            fe.title(f"[{keyword}] {entry.title}")
-            fe.link(href=entry.link)
-            fe.description(getattr(entry, 'summary', 'Açıklama bulunamadı.'))
+            fe.id(getattr(entry, 'link', ''))
+            title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
+            fe.title(f"[{keyword}] {title}")
+            fe.link(href=getattr(entry, 'link', ''))
+            desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or 'Açıklama bulunamadı.')
+            fe.description(desc)
 
             if hasattr(entry, 'published_parsed'):
                 pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
                 fe.published(pub_date)
 
-    # Save the output file
-    fg.rss_file('gunluk_haberler.xml', pretty=True)
+    # Save the output file explicitly as UTF-8 to avoid encoding issues
+    rss_bytes = fg.rss_str(pretty=True)
+    try:
+        with open('gunluk_haberler.xml', 'wb') as out:
+            if isinstance(rss_bytes, bytes):
+                out.write(rss_bytes)
+            else:
+                out.write(rss_bytes.encode('utf-8'))
+    except Exception as e:
+        print('Failed to write feed file:', e)
+        return
+
     print("Son 7 günün güncel haber akışı oluşturuldu.")
+
 
 if __name__ == '__main__':
     fetch_and_generate_rss()
