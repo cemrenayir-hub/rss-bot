@@ -1,14 +1,11 @@
 {
   "rss_filter_config": {
     "name": "Ecology & Climate Crisis News Filter",
-    "description": "Two categories: English and Turkish keywords.",
+    "description": "Unified keyword set (English + Turkish). Language-specific search options removed.",
     "match_type": "any",
     "categories": [
       {
-        "name": "English",
-        "hl": "en",
-        "gl": "US",
-        "ceid": "US:en",
+        "name": "All",
         "keywords": [
           "climate change",
           "global warming",
@@ -29,15 +26,7 @@
           "eco friendly",
           "solar power",
           "wind power",
-          "clean energy"
-        ]
-      },
-      {
-        "name": "Turkish",
-        "hl": "tr",
-        "gl": "TR",
-        "ceid": "TR:tr",
-        "keywords": [
+          "clean energy",
           "iklim değişikliği",
           "küresel ısınma",
           "çevre kirliliği",
@@ -61,10 +50,7 @@
         ]
       }
     ],
-    "follow_urls": [
-
-    ],
-    "search_both_languages": true,
+    "follow_urls": [],
     "dedupe_threshold": 0.85,
     "dedupe_keep": "earliest",
     "per_keyword_cap": 50
