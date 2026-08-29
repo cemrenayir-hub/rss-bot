@@ -22,8 +22,8 @@ def fetch_and_generate_rss():
         google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl=tr&gl=TR&ceid=TR:tr"
         feed = feedparser.parse(google_news_url)
 
-        # Fetch up to 5 articles per keyword
-        for entry in feed.entries[:5]:
+        # Fetch all available articles returned by the search (no hard limit)
+        for entry in feed.entries:
             if entry.link in seen_links:
                 continue
             seen_links.add(entry.link)

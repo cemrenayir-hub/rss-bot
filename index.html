@@ -33,9 +33,24 @@
     const REFRESH_MS = 30 * 60 * 1000; // 30 minutes
     const container = document.getElementById('feed');
 
-    function renderItems(items){
+    // create filter controls
+    const controls = document.createElement('div');
+    controls.style.margin = '12px 0';
+    controls.innerHTML = `
+      <label style="font-size:0.95rem;color:var(--muted);">Filtre: </label>
+      <select id="keyword-filter" style="margin-left:8px;padding:6px;border-radius:6px;border:1px solid #e6e6e6"></select>
+    `;
+    const header = document.querySelector('h1');
+    header.insertAdjacentElement('afterend', controls);
+
+    function renderItems(items, keywordFilter){
       container.innerHTML = '';
-      items.slice(0,30).forEach(it=>{
+      const filtered = keywordFilter ? items.filter(it=>{
+        const title = it.getElementsByTagName('title')[0]?.textContent || '';
+        return title.includes('['+keywordFilter+']');
+      }) : items;
+
+      filtered.forEach(it=>{
         const title = it.getElementsByTagName('title')[0]?.textContent || 'No title';
         const link = it.getElementsByTagName('link')[0]?.textContent || '#';
         const desc = it.getElementsByTagName('description')[0]?.textContent || '';
@@ -62,29 +77,52 @@
       if (stamp) stamp.textContent = 'Güncellendi: ' + now.toLocaleString();
     }
 
-    async function loadFeed(){
+    function populateFilter(items){
+      const sel = document.getElementById('keyword-filter');
+      sel.innerHTML = '';
+      const optAll = document.createElement('option'); optAll.value = ''; optAll.textContent = 'Tümü'; sel.appendChild(optAll);
+      const keys = new Set();
+      const re = /^\[([^\]]+)\]/;
+      items.forEach(it=>{
+        const title = it.getElementsByTagName('title')[0]?.textContent || '';
+        const m = title.match(re);
+        if (m && m[1]) keys.add(m[1]);
+      });
+      Array.from(keys).sort().forEach(k=>{
+        const o = document.createElement('option'); o.value = k; o.textContent = k; sel.appendChild(o);
+      });
+      sel.addEventListener('change',()=>{
+        const v = sel.value;
+        loadAndRender(v);
+      });
+    }
+
+    async function loadFeedRaw(){
+      const res = await fetch('gunluk_haberler.xml', {cache: 'no-store'});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      const doc = new DOMParser().parseFromString(text,'application/xml');
+      return Array.from(doc.getElementsByTagName('item'));
+    }
+
+    async function loadAndRender(filter){
       try{
-        const res = await fetch('gunluk_haberler.xml', {cache: 'no-store'});
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const text = await res.text();
-        const doc = new DOMParser().parseFromString(text,'application/xml');
-        const items = Array.from(doc.getElementsByTagName('item'));
+        const items = await loadFeedRaw();
         if(!items.length){ container.textContent = 'No items'; return; }
-        renderItems(items);
+        renderItems(items, filter);
       }catch(e){ container.textContent = 'Yükleme hatası: '+e.message }
     }
 
     // Add last-updated element
-    const header = document.querySelector('h1');
     const stamp = document.createElement('div');
     stamp.id = 'last-updated';
     stamp.className = 'meta';
     stamp.style.marginBottom = '12px';
-    header.insertAdjacentElement('afterend', stamp);
+    controls.insertAdjacentElement('afterend', stamp);
 
     // Initial load and periodic refresh
-    loadFeed();
-    setInterval(loadFeed, REFRESH_MS);
+    loadFeedRaw().then(items=>{ populateFilter(items); renderItems(items); }).catch(e=>{ container.textContent = 'Yükleme hatası: '+e.message });
+    setInterval(()=>{ loadFeedRaw().then(items=>{ const sel = document.getElementById('keyword-filter'); const v = sel ? sel.value : ''; renderItems(items, v); }).catch(e=>{ container.textContent = 'Yükleme hatası: '+e.message }); }, REFRESH_MS);
   </script>
 </body>
 </html>
