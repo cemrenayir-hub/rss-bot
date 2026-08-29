@@ -53,9 +53,11 @@
 
     function renderItems(items, keywordFilter){
       container.innerHTML = '';
+      const tagRe = /^\[([^\]]+)\]/;
       const filtered = keywordFilter ? items.filter(it=>{
-        const title = it.getElementsByTagName('title')[0]?.textContent || '';
-        return title.includes('['+keywordFilter+']');
+        const title = (it.getElementsByTagName('title')[0]?.textContent || '').normalize('NFC');
+        const m = title.match(tagRe);
+        return m && m[1] === keywordFilter;
       }) : items;
 
       filtered.forEach(it=>{
@@ -112,9 +114,9 @@
     async function loadAndRender(filter){
       try{
         const items = await loadFeedRaw();
-        if(!items.length){ container.textContent = 'No items'; return; }
+        if(!items.length){ container.textContent = 'No items'; console.warn('feed had no items'); return; }
         renderItems(items, filter);
-      }catch(e){ container.textContent = 'Yükleme hatası: '+e.message }
+      }catch(e){ console.error('loadAndRender error', e); container.textContent = 'Yükleme hatası: '+e.message; }
     }
 
     // Add last-updated element
@@ -125,8 +127,8 @@
     controls.insertAdjacentElement('afterend', stamp);
 
     // Initial load and periodic refresh
-    loadFeedRaw().then(items=>{ populateFilter(items); renderItems(items); }).catch(e=>{ container.textContent = 'Yükleme hatası: '+e.message });
-    setInterval(()=>{ loadFeedRaw().then(items=>{ const sel = document.getElementById('keyword-filter'); const v = sel ? sel.value : ''; renderItems(items, v); }).catch(e=>{ container.textContent = 'Yükleme hatası: '+e.message }); }, REFRESH_MS);
+    loadFeedRaw().then(items=>{ populateFilter(items); renderItems(items); }).catch(e=>{ console.error('initial load failed', e); container.textContent = 'Yükleme hatası: '+e.message });
+    setInterval(()=>{ const sel = document.getElementById('keyword-filter'); const v = sel ? sel.value : ''; loadAndRender(v).catch(e=>{ console.error('refresh failed', e); container.textContent = 'Yükleme hatası: '+e.message; }); }, REFRESH_MS);
   </script>
 </body>
 </html>
