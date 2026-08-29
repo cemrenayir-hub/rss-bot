@@ -150,14 +150,21 @@ def fetch_and_generate_rss():
                 'category': cat_name
             })
 
-    # Ensure pub_date values are timezone-aware to avoid comparison errors
+    # Ensure pub_date values are timezone-aware and normalized to UTC to avoid comparison errors
     for c in candidates:
         pd = c.get('pub_date')
-        if pd is not None and getattr(pd, 'tzinfo', None) is None:
-            try:
-                c['pub_date'] = pd.replace(tzinfo=timezone.utc)
-            except Exception:
-                c['pub_date'] = pd
+        if pd is None:
+            continue
+        try:
+            if getattr(pd, 'tzinfo', None) is None:
+                # assume UTC if naive
+                pd = pd.replace(tzinfo=timezone.utc)
+            else:
+                pd = pd.astimezone(timezone.utc)
+            c['pub_date'] = pd
+        except Exception:
+            # leave as-is if unexpected type
+            c['pub_date'] = pd
 
     # Deduplicate similar items server-side using title+description similarity
     try:
@@ -189,9 +196,9 @@ def fetch_and_generate_rss():
 
         # sort to prefer earliest when keeping earliest
         if dedupe_keep == 'earliest':
-            candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.max)
+            candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.max.replace(tzinfo=timezone.utc))
         else:
-            candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.min, reverse=True)
+            candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.min.replace(tzinfo=timezone.utc), reverse=True)
 
         keep = []
         skipped = [False]*len(candidates)
