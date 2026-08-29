@@ -12,7 +12,9 @@ def fetch_and_generate_rss():
     fg.subtitle('Belirlenen konularda en güncel haber akışı.')
     fg.language('tr')
 
-    keywords = ["Yapay Zeka", "Yazılım Geliştirme", "Ekonomi", "Teknoloji"]
+    keywords = [
+        "iklim adaleti", "ekolojik yıkım", "sermaye ve doğa talanı", "politik ekoloji", "müştereklerin savunulması", "yeşil badana", "yeşil boyama", "iklimi değil sistemi değiştir", "ekolojik kırım", "eko-kırım", "ekofeminizm", "gıda egemenliği", "agroekoloji", "iklim mültecileri", "eko-anksiyete", "yerel ekoloji direnişleri", "ÇED raporu iptali", "yaşam alanlarının savunulması", "acele kamulaştırma kararı", "köylülerin doğa nöbeti", "çevre mitingi", "çevre davaları", "ekoloji örgütleri", "çevre platformu", "maden şirketleri doğa katliamı", "siyanürlü altın madeni", "HES projeleri zararları", "JES protestoları", "RES protestoları", "ağaç kıyımı", "orman kıyımı", "nükleer çöplük", "termik santral protestoları", "taş ocakları doğa katliamı", "rant odaklı çevre politikaları", "iklim kanunu eleştirileri", "karbon ticareti eleştirisi", "talan politikaları", "imara açılan sit alanları"
+    ]
     seen_links = set()
 
     for keyword in keywords:
@@ -40,7 +42,7 @@ def fetch_and_generate_rss():
 
     # Save the output file
     fg.rss_file('gunluk_haberler.xml', pretty=True)
-    print("Son 24 saatin güncel haber akışı oluşturuldu.")
+    print("Son 7 günün güncel haber akışı oluşturuldu.")
 
 if __name__ == '__main__':
     fetch_and_generate_rss()
