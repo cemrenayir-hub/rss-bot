@@ -16,8 +16,8 @@ def fetch_and_generate_rss():
     seen_links = set()
 
     for keyword in keywords:
-        # restrict results to the past 24 hours
-        search_query = f"{keyword} when:1d"
+        # restrict results to the past 7 days
+        search_query = f"{keyword} when:7d"
         encoded_keyword = urllib.parse.quote(search_query)
         google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl=tr&gl=TR&ceid=TR:tr"
         feed = feedparser.parse(google_news_url)
