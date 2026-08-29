@@ -1,0 +1,72 @@
+{
+  "rss_filter_config": {
+    "name": "Ecology & Climate Crisis News Filter",
+    "description": "Two categories: English and Turkish keywords.",
+    "match_type": "any",
+    "categories": [
+      {
+        "name": "English",
+        "hl": "en",
+        "gl": "US",
+        "ceid": "US:en",
+        "keywords": [
+          "climate change",
+          "global warming",
+          "environmental pollution",
+          "biodiversity loss",
+          "sustainability",
+          "renewable energy",
+          "green economy",
+          "circular economy",
+          "carbon emissions",
+          "net zero",
+          "extreme weather",
+          "deforestation",
+          "water scarcity",
+          "climate crisis",
+          "climate emergency",
+          "environmental science",
+          "eco friendly",
+          "solar power",
+          "wind power",
+          "clean energy"
+        ]
+      },
+      {
+        "name": "Turkish",
+        "hl": "tr",
+        "gl": "TR",
+        "ceid": "TR:tr",
+        "keywords": [
+          "iklim değişikliği",
+          "küresel ısınma",
+          "çevre kirliliği",
+          "doğa haberleri",
+          "iklim krizi",
+          "ekolojik denge",
+          "sürdürülebilirlik",
+          "yenilenebilir enerji",
+          "temiz enerji",
+          "karbon ayak izi",
+          "su tasarrufu",
+          "sıfır atık",
+          "geri dönüşüm",
+          "kuraklık",
+          "hava kirliliği",
+          "aşırı hava olayları",
+          "su kıtlığı",
+          "orman yangınları",
+          "biyoçeşitlilik",
+          "çevre kirliliği çeşitleri"
+        ]
+      }
+    ],
+    "follow_urls": [
+
+    ],
+    "search_both_languages": true,
+    "dedupe_threshold": 0.85,
+    "dedupe_keep": "earliest",
+    "per_keyword_cap": 50
+  }
+}
