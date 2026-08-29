@@ -27,6 +27,7 @@ def fetch_and_generate_rss():
             'keywords': ["Yapay Zeka", "Yazılım Geliştirme", "Ekonomi", "Teknoloji"]
         }
     ]
+    search_both = False
     if os.path.exists(config_path):
         try:
             with open(config_path, 'r', encoding='utf-8') as cf:
@@ -50,11 +51,15 @@ def fetch_and_generate_rss():
                 follow_urls = cfg.get('rss_filter_config', {}).get('follow_urls', [])
                 if not isinstance(follow_urls, list):
                     follow_urls = []
+                # load bilingual search flag
+                search_both = bool(cfg.get('rss_filter_config', {}).get('search_both_languages', False))
         except Exception as e:
             print('Failed to load rss_filter_config.json:', e)
             follow_urls = []
+            search_both = False
     else:
         follow_urls = []
+        search_both = False
 
     seen_links = set()
 
@@ -68,27 +73,32 @@ def fetch_and_generate_rss():
             # restrict results to the past 7 days
             search_query = f"{keyword} when:7d"
             encoded_keyword = urllib.parse.quote(search_query)
-            google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl={hl}&gl={gl}&ceid={ceid}"
-            feed = feedparser.parse(google_news_url)
+            # If search_both is enabled, query both English and Turkish endpoints for broader coverage
+            lang_variants = [(hl, gl, ceid)]
+            if search_both:
+                lang_variants = [('en', 'US', 'US:en'), ('tr', 'TR', 'TR:tr')]
+            for (l_hl, l_gl, l_ceid) in lang_variants:
+                google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl={l_hl}&gl={l_gl}&ceid={l_ceid}"
+                feed = feedparser.parse(google_news_url)
 
-            # Fetch all available articles returned by the search (no hard limit)
-            for entry in feed.entries:
-                link = getattr(entry, 'link', None)
-                if not link or link in seen_links:
-                    continue
-                seen_links.add(link)
+                # Fetch all available articles returned by the search (no hard limit)
+                for entry in feed.entries:
+                    link = getattr(entry, 'link', None)
+                    if not link or link in seen_links:
+                        continue
+                    seen_links.add(link)
 
-                fe = fg.add_entry()
-                fe.id(link)
-                title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
-                fe.title(f"[{cat_name}] {title}")
-                fe.link(href=link)
-                desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or 'Açıklama bulunamadı.')
-                fe.description(desc)
+                    fe = fg.add_entry()
+                    fe.id(link)
+                    title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
+                    fe.title(f"[{cat_name}] {title}")
+                    fe.link(href=link)
+                    desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or 'Açıklama bulunamadı.')
+                    fe.description(desc)
 
-                if hasattr(entry, 'published_parsed'):
-                    pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-                    fe.published(pub_date)
+                    if hasattr(entry, 'published_parsed'):
+                        pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                        fe.published(pub_date)
 
     # Process follow_urls (optional) — accept list of strings or objects {url, category}
     for fu in (follow_urls or []):
