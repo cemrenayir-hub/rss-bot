@@ -34,29 +34,22 @@ def fetch_and_generate_rss():
                 cfg = json.load(cf)
                 cats = cfg.get('rss_filter_config', {}).get('categories')
                 if isinstance(cats, list) and cats:
-                    # normalize keywords in each category
                     loaded = []
                     for c in cats:
                         name = str(c.get('name', '')).strip() or 'Category'
-                        hl = str(c.get('hl', 'en'))
-                        gl = str(c.get('gl', 'US'))
-                        ceid = str(c.get('ceid', f'{gl}:{hl}'))
                         kws = c.get('keywords', []) if isinstance(c.get('keywords', []), list) else []
                         kws_norm = [unicodedata.normalize('NFC', str(k).strip()) for k in kws if str(k).strip()]
                         if kws_norm:
-                            loaded.append({'name': name, 'hl': hl, 'gl': gl, 'ceid': ceid, 'keywords': kws_norm})
+                            loaded.append({'name': name, 'keywords': kws_norm})
                     if loaded:
                         categories = loaded
                 # load follow_urls (optional)
                 follow_urls = cfg.get('rss_filter_config', {}).get('follow_urls', [])
                 if not isinstance(follow_urls, list):
                     follow_urls = []
-                # load bilingual search flag
-                search_both = bool(cfg.get('rss_filter_config', {}).get('search_both_languages', False))
         except Exception as e:
             print('Failed to load rss_filter_config.json:', e)
             follow_urls = []
-            search_both = False
     else:
         follow_urls = []
         search_both = False
@@ -68,20 +61,13 @@ def fetch_and_generate_rss():
     # Iterate categories and their keywords; label entries by category name
     for cat in categories:
         cat_name = cat.get('name', 'Category')
-        hl = cat.get('hl', 'en')
-        gl = cat.get('gl', 'US')
-        ceid = cat.get('ceid', f'{gl}:{hl}')
         for keyword in cat.get('keywords', []):
             # restrict results to the past 7 days
             search_query = f"{keyword} when:7d"
             encoded_keyword = urllib.parse.quote(search_query)
-            # If search_both is enabled, query both English and Turkish endpoints for broader coverage
-            lang_variants = [(hl, gl, ceid)]
-            if search_both:
-                lang_variants = [('en', 'US', 'US:en'), ('tr', 'TR', 'TR:tr')]
-            for (l_hl, l_gl, l_ceid) in lang_variants:
-                google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl={l_hl}&gl={l_gl}&ceid={l_ceid}"
-                feed = feedparser.parse(google_news_url)
+            # Query Google News RSS without language-specific parameters
+            google_news_url = f"https://news.google.com/rss/search?q={encoded_keyword}"
+            feed = feedparser.parse(google_news_url)
 
                 # Apply per-keyword cap if configured
                 cap = None
