@@ -178,58 +178,78 @@ def fetch_and_generate_rss(debug=False):
                 'category': cat_name
             })
 
-    # Deduplicate similar items server-side using title+description similarity
+    # Use AI assistant (or local heuristics) to filter relevance and merge duplicates
     try:
-        import difflib, re
-
-        def normalize_for_compare(s):
-            s = unicodedata.normalize('NFD', s or '')
-            # remove diacritics
-            s = ''.join(ch for ch in s if not unicodedata.combining(ch))
-            s = s.lower()
-            # remove punctuation
-            s = re.sub(r"[^\w\s]", ' ', s)
-            s = re.sub(r"\s+", ' ', s).strip()
-            return s
-
-        threshold = 0.85
-        dedupe_keep = 'earliest'
+        from ai_assistant import filter_relevant_and_merge_duplicates
+        # build a flattened keyword list from categories
+        flattened_keywords = []
+        for cat in categories:
+            for k in cat.get('keywords', []):
+                if k and k not in flattened_keywords:
+                    flattened_keywords.append(k)
+        similarity_threshold = 0.6
         try:
             with open(config_path, 'r', encoding='utf-8') as cf:
                 cfg = json.load(cf)
-                threshold = float(cfg.get('rss_filter_config', {}).get('dedupe_threshold', threshold))
-                dedupe_keep = str(cfg.get('rss_filter_config', {}).get('dedupe_keep', dedupe_keep))
+                similarity_threshold = float(cfg.get('rss_filter_config', {}).get('ai_similarity_threshold', similarity_threshold))
         except Exception:
             pass
-
-        # prepare normalized text
-        for c in candidates:
-            c['cmp_text'] = normalize_for_compare((c.get('title','') + ' ' + c.get('desc','')))
-
-        # sort to prefer earliest when keeping earliest
-        if dedupe_keep == 'earliest':
-            candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.max)
-        else:
-            candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.min, reverse=True)
-
-        keep = []
-        skipped = [False]*len(candidates)
-        for i in range(len(candidates)):
-            if skipped[i]:
-                continue
-            a = candidates[i]
-            keep.append(a)
-            for j in range(i+1, len(candidates)):
-                if skipped[j]:
-                    continue
-                b = candidates[j]
-                ratio = difflib.SequenceMatcher(None, a['cmp_text'], b['cmp_text']).ratio()
-                if ratio >= threshold:
-                    skipped[j] = True
-        unique_entries = keep
+        filtered_candidates = filter_relevant_and_merge_duplicates(candidates, flattened_keywords, similarity_threshold=similarity_threshold, debug=debug)
+        unique_entries = filtered_candidates
     except Exception as e:
-        print('Deduplication failed, falling back to raw candidates:', e)
-        unique_entries = candidates
+        print('AI assistant filtering failed, falling back to local dedupe:', e)
+        # Deduplicate similar items server-side using title+description similarity
+        try:
+            import difflib, re
+
+            def normalize_for_compare(s):
+                s = unicodedata.normalize('NFD', s or '')
+                # remove diacritics
+                s = ''.join(ch for ch in s if not unicodedata.combining(ch))
+                s = s.lower()
+                # remove punctuation
+                s = re.sub(r"[^\w\s]", ' ', s)
+                s = re.sub(r"\s+", ' ', s).strip()
+                return s
+
+            threshold = 0.85
+            dedupe_keep = 'earliest'
+            try:
+                with open(config_path, 'r', encoding='utf-8') as cf:
+                    cfg = json.load(cf)
+                    threshold = float(cfg.get('rss_filter_config', {}).get('dedupe_threshold', threshold))
+                    dedupe_keep = str(cfg.get('rss_filter_config', {}).get('dedupe_keep', dedupe_keep))
+            except Exception:
+                pass
+
+            # prepare normalized text
+            for c in candidates:
+                c['cmp_text'] = normalize_for_compare((c.get('title','') + ' ' + c.get('desc','')))
+
+            # sort to prefer earliest when keeping earliest
+            if dedupe_keep == 'earliest':
+                candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.max)
+            else:
+                candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.min, reverse=True)
+
+            keep = []
+            skipped = [False]*len(candidates)
+            for i in range(len(candidates)):
+                if skipped[i]:
+                    continue
+                a = candidates[i]
+                keep.append(a)
+                for j in range(i+1, len(candidates)):
+                    if skipped[j]:
+                        continue
+                    b = candidates[j]
+                    ratio = difflib.SequenceMatcher(None, a['cmp_text'], b['cmp_text']).ratio()
+                    if ratio >= threshold:
+                        skipped[j] = True
+            unique_entries = keep
+        except Exception as e:
+            print('Deduplication failed, falling back to raw candidates:', e)
+            unique_entries = candidates
 
     # Order entries newest first
     try:
