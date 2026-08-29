@@ -1,2 +1,3 @@
 feedparser
 feedgen
+openai
