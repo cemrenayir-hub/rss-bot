@@ -87,16 +87,36 @@
       const sel = document.getElementById('category-filter');
       sel.innerHTML = '';
       const optAll = document.createElement('option'); optAll.value = ''; optAll.textContent = 'Tümü'; sel.appendChild(optAll);
-      const keys = new Set();
+      const counts = {};
       const re = /^\[([^\]]+)\]/;
       items.forEach(it=>{
         const title = it.getElementsByTagName('title')[0]?.textContent || '';
         const m = title.match(re);
-        if (m && m[1]) keys.add(m[1]);
+        const k = (m && m[1]) ? m[1] : '(none)';
+        counts[k] = (counts[k] || 0) + 1;
       });
-      Array.from(keys).sort().forEach(k=>{
-        const o = document.createElement('option'); o.value = k; o.textContent = k; sel.appendChild(o);
+      Object.keys(counts).sort().forEach(k=>{
+        const o = document.createElement('option'); o.value = k; o.textContent = `${k} (${counts[k]})`; sel.appendChild(o);
       });
+
+      // Populate small stats panel if present
+      const stats = document.getElementById('category-stats');
+      if (stats){
+        stats.innerHTML = '';
+        Object.keys(counts).sort().forEach(k=>{
+          const colors = colorForKeyword(k);
+          const span = document.createElement('span');
+          span.style.display = 'inline-block';
+          span.style.marginRight = '8px';
+          span.style.padding = '4px 8px';
+          span.style.borderRadius = '12px';
+          span.style.background = colors.bg;
+          span.style.color = colors.text;
+          span.textContent = `${k} (${counts[k]})`;
+          stats.appendChild(span);
+        });
+      }
+
       sel.addEventListener('change',()=>{
         const v = sel.value;
         loadAndRender(v);
@@ -119,12 +139,17 @@
       }catch(e){ console.error('loadAndRender error', e); container.textContent = 'Yükleme hatası: '+e.message; }
     }
 
-    // Add last-updated element
+    // Add small stats panel and last-updated element
+    const statsDiv = document.createElement('div');
+    statsDiv.id = 'category-stats';
+    statsDiv.style.margin = '8px 0 6px 0';
+    controls.insertAdjacentElement('afterend', statsDiv);
+
     const stamp = document.createElement('div');
     stamp.id = 'last-updated';
     stamp.className = 'meta';
     stamp.style.marginBottom = '12px';
-    controls.insertAdjacentElement('afterend', stamp);
+    statsDiv.insertAdjacentElement('afterend', stamp);
 
     // Initial load and periodic refresh
     loadFeedRaw().then(items=>{ populateFilter(items); renderItems(items); }).catch(e=>{ console.error('initial load failed', e); container.textContent = 'Yükleme hatası: '+e.message });
