@@ -108,7 +108,12 @@
         ]
       }
     ],
-    "follow_urls": [],
+    "follow_urls": [
+      "https://www.evrensel.net/kategori/13/cevre",
+      "https://www.birgun.net/etiket/ekoloji-127",
+      "https://www.birgun.net/kategori/cevre-15",
+      "https://jinnews.net/EKOLOJ"
+    ],
     "dedupe_threshold": 0.82,
     "dedupe_keep": "earliest",
     "per_keyword_cap": 30
