@@ -217,7 +217,15 @@ def fetch_and_generate_rss():
         print('Deduplication failed, falling back to raw candidates:', e)
         unique_entries = candidates
 
-    # Build feed from unique entries
+    # Order entries newest first
+    try:
+        # treat missing pub_date as very old so they appear last
+        epoch = datetime(1970,1,1, tzinfo=timezone.utc)
+        unique_entries.sort(key=lambda x: x.get('pub_date') or epoch, reverse=True)
+    except Exception:
+        pass
+
+    # Build feed from unique entries (newest to oldest)
     for e in unique_entries:
         fe = fg.add_entry()
         fe.id(e.get('link',''))
