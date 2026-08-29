@@ -10,7 +10,7 @@ import unicodedata
 def fetch_and_generate_rss():
     fg = FeedGenerator()
     fg.id('https://cemrenayir-hub.github.io/rss-bot/gunluk_haberler.xml')
-    fg.title('Günlük Özel Haber Özeti')
+    fg.title('Ekoloji Haber Servisi')
     fg.author({'name': 'Haber Botu', 'email': 'bot@example.com'})
     fg.link(href='https://cemrenayir-hub.github.io/rss-bot/', rel='alternate')
     fg.subtitle('Belirlenen konularda en güncel haber akışı.')
@@ -61,7 +61,8 @@ def fetch_and_generate_rss():
         follow_urls = []
         search_both = False
 
-    seen_links = set()
+    # Collect candidate entries first so we can deduplicate similar items across sources
+    candidates = []
 
     # Iterate categories and their keywords; label entries by category name
     for cat in categories:
@@ -88,17 +89,21 @@ def fetch_and_generate_rss():
                         continue
                     seen_links.add(link)
 
-                    fe = fg.add_entry()
-                    fe.id(link)
                     title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
-                    fe.title(f"[{cat_name}] {title}")
-                    fe.link(href=link)
                     desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or 'Açıklama bulunamadı.')
-                    fe.description(desc)
-
+                    pub_date = None
                     if hasattr(entry, 'published_parsed'):
-                        pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-                        fe.published(pub_date)
+                        try:
+                            pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                        except Exception:
+                            pub_date = None
+                    candidates.append({
+                        'link': link,
+                        'title': title,
+                        'desc': desc,
+                        'pub_date': pub_date,
+                        'category': cat_name
+                    })
 
     # Process follow_urls (optional) — accept list of strings or objects {url, category}
     for fu in (follow_urls or []):
@@ -120,26 +125,96 @@ def fetch_and_generate_rss():
                 if not link or link in seen_links:
                     continue
                 seen_links.add(link)
-                fe = fg.add_entry()
-                fe.id(link)
                 title = unicodedata.normalize('NFC', getattr(entry, 'title', '') or '')
-                fe.title(f"[{cat_name}] {title}")
-                fe.link(href=link)
                 desc = unicodedata.normalize('NFC', getattr(entry, 'summary', '') or '')
-                fe.description(desc)
+                pub_date = None
                 if hasattr(entry, 'published_parsed'):
-                    pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-                    fe.published(pub_date)
+                    try:
+                        pub_date = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                    except Exception:
+                        pub_date = None
+                candidates.append({
+                    'link': link,
+                    'title': title,
+                    'desc': desc,
+                    'pub_date': pub_date,
+                    'category': cat_name
+                })
         else:
             # fallback: include the URL as a single entry
             if url in seen_links:
                 continue
             seen_links.add(url)
-            fe = fg.add_entry()
-            fe.id(url)
-            fe.title(f"[{cat_name}] {url}")
-            fe.link(href=url)
-            fe.description('Followed URL (no feed entries).')
+            candidates.append({
+                'link': url,
+                'title': url,
+                'desc': 'Followed URL (no feed entries).',
+                'pub_date': None,
+                'category': cat_name
+            })
+
+    # Deduplicate similar items server-side using title+description similarity
+    try:
+        import difflib, re
+
+        def normalize_for_compare(s):
+            s = unicodedata.normalize('NFD', s or '')
+            # remove diacritics
+            s = ''.join(ch for ch in s if not unicodedata.combining(ch))
+            s = s.lower()
+            # remove punctuation
+            s = re.sub(r"[^\w\s]", ' ', s)
+            s = re.sub(r"\s+", ' ', s).strip()
+            return s
+
+        threshold = 0.85
+        dedupe_keep = 'earliest'
+        try:
+            with open(config_path, 'r', encoding='utf-8') as cf:
+                cfg = json.load(cf)
+                threshold = float(cfg.get('rss_filter_config', {}).get('dedupe_threshold', threshold))
+                dedupe_keep = str(cfg.get('rss_filter_config', {}).get('dedupe_keep', dedupe_keep))
+        except Exception:
+            pass
+
+        # prepare normalized text
+        for c in candidates:
+            c['cmp_text'] = normalize_for_compare((c.get('title','') + ' ' + c.get('desc','')))
+
+        # sort to prefer earliest when keeping earliest
+        if dedupe_keep == 'earliest':
+            candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.max)
+        else:
+            candidates.sort(key=lambda x: x['pub_date'] if x['pub_date'] is not None else datetime.min, reverse=True)
+
+        keep = []
+        skipped = [False]*len(candidates)
+        for i in range(len(candidates)):
+            if skipped[i]:
+                continue
+            a = candidates[i]
+            keep.append(a)
+            for j in range(i+1, len(candidates)):
+                if skipped[j]:
+                    continue
+                b = candidates[j]
+                ratio = difflib.SequenceMatcher(None, a['cmp_text'], b['cmp_text']).ratio()
+                if ratio >= threshold:
+                    skipped[j] = True
+        unique_entries = keep
+    except Exception as e:
+        print('Deduplication failed, falling back to raw candidates:', e)
+        unique_entries = candidates
+
+    # Build feed from unique entries
+    for e in unique_entries:
+        fe = fg.add_entry()
+        fe.id(e.get('link',''))
+        fe.title(f"[{e.get('category','')}] {e.get('title','')}")
+        fe.link(href=e.get('link',''))
+        fe.description(e.get('desc',''))
+        if e.get('pub_date'):
+            fe.published(e.get('pub_date'))
 
     # Save the output file explicitly as UTF-8 to avoid encoding issues
     rss_bytes = fg.rss_str(pretty=True)
