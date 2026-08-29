@@ -150,6 +150,15 @@ def fetch_and_generate_rss():
                 'category': cat_name
             })
 
+    # Ensure pub_date values are timezone-aware to avoid comparison errors
+    for c in candidates:
+        pd = c.get('pub_date')
+        if pd is not None and getattr(pd, 'tzinfo', None) is None:
+            try:
+                c['pub_date'] = pd.replace(tzinfo=timezone.utc)
+            except Exception:
+                c['pub_date'] = pd
+
     # Deduplicate similar items server-side using title+description similarity
     try:
         import difflib, re
