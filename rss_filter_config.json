@@ -1,0 +1,121 @@
+{
+  "rss_filter_config": {
+    "name": "Ecosocialist / Marxist Ecology Filter",
+    "description": "Curated bilingual categories for Marxist, ecosocialist, and related ecology content. Categories balance relevance and run-time.",
+    "match_type": "any",
+    "categories": [
+      {
+        "name": "Ecosocialism & Theory",
+        "keywords": [
+          "ecosocialism",
+          "ecosocialist",
+          "eco-socialism",
+          "ekososyalizm",
+          "ekososyalist",
+          "green socialism",
+          "yeşil sosyalizm",
+          "Marxist ecology",
+          "Marksist ekoloji",
+          "Marxist environmentalism",
+          "Marksist çevrecilik",
+          "social ecology",
+          "sosyal ekoloji"
+        ]
+      },
+      {
+        "name": "Climate Justice & Movements",
+        "keywords": [
+          "climate justice",
+          "iklim adaleti",
+          "environmental justice",
+          "çevre adaleti",
+          "just transition",
+          "adil dönüşüm",
+          "climate reparations",
+          "iklim tazminatı",
+          "fossil fuel divestment",
+          "fosil yakıt tasfiye",
+          "anti-capitalist climate",
+          "antikapitalist iklim"
+        ]
+      },
+      {
+        "name": "Energy & Fossil Fuels",
+        "keywords": [
+          "fossil fuels",
+          "fosil yakıt",
+          "phase out fossil fuels",
+          "fosil yakıttan çıkış",
+          "divestment",
+          "nationalize energy",
+          "energy nationalization",
+          "enerji kamulaştırması",
+          "public ownership energy",
+          "renewable transition"
+        ]
+      },
+      {
+        "name": "Labor, Workers & Transition",
+        "keywords": [
+          "just transition for workers",
+          "işçi-çevre",
+          "worker-environment",
+          "workers' control",
+          "işçi kontrolü",
+          "labor and environment",
+          "işçi hakları"
+        ]
+      },
+      {
+        "name": "Agriculture & Land",
+        "keywords": [
+          "agroecology",
+          "agroekoloji",
+          "food sovereignty",
+          "gıda egemenliği",
+          "land justice",
+          "toprak adaleti",
+          "peasant",
+          "köylü"
+        ]
+      },
+      {
+        "name": "Commons & Solidarity Economy",
+        "keywords": [
+          "commons",
+          "ortak mallar",
+          "mutual aid",
+          "karşılıklı yardım",
+          "solidarity economy",
+          "dayanışma ekonomisi",
+          "cooperative",
+          "kooperatif"
+        ]
+      },
+      {
+        "name": "Extractivism & Critique",
+        "keywords": [
+          "extractivism",
+          "ekstraktivizm",
+          "extractive industries",
+          "çıkarcılık",
+          "mining",
+          "madencilik",
+          "pollution",
+          "çevre kirliliği",
+          "environmental destruction",
+          "çevre tahribatı"
+        ]
+      }
+    ],
+    "follow_urls": [
+      "https://www.evrensel.net/kategori/13/cevre",
+      "https://www.birgun.net/etiket/ekoloji-127",
+      "https://www.birgun.net/kategori/cevre-15",
+      "https://jinnews.net/EKOLOJ"
+    ],
+    "dedupe_threshold": 0.82,
+    "dedupe_keep": "earliest",
+    "per_keyword_cap": 30
+  }
+}
