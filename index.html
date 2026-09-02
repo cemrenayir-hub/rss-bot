@@ -1,180 +1,474 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ekoloji Haber Servisi</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#f6f7f9; --card:#ffffff; --muted:#6b7280; --text:#0b1220; --muted-2:#9aa0a6
+    :root {
+      font-family: 'Inter', sans-serif;
     }
-    html,body{height:100%}
-    body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;margin:16px;background:var(--bg);color:var(--text);line-height:1.45}
-    .app{max-width:900px;margin:6px auto}
-    h1{font-size:20px;margin:6px 0;font-weight:600}
-    #last-updated{margin:6px 0;color:var(--muted);font-size:13px}
-    #feed{margin-top:12px}
-
-    .item{background:var(--card);padding:10px 12px;margin:8px 0;display:flex;align-items:flex-start;gap:12px;border-radius:8px;box-shadow:0 1px 3px rgba(16,24,40,0.04);border:1px solid rgba(16,24,40,0.03)}
-    .accent{width:6px;height:56px;border-radius:6px;flex-shrink:0}
-    .content{flex:1}
-    .title{font-size:15px;margin:0 0 6px 0}
-    .title a{color:var(--text);text-decoration:none}
-    .meta{color:var(--muted);font-size:12px}
-    .source{display:inline-block;padding:4px 8px;border-radius:12px;font-size:12px;margin-right:8px}
-
-    #controls{display:flex;align-items:center;gap:12px;margin:10px 0}
-    #category-stats span{opacity:0.95}
-
-    /* dark mode */
-    body.dark{ --bg:#0b1220; --card:#07101a; --muted:#94a3b8; --text:#e6eef8 }
-    body.dark .item{box-shadow:0 2px 8px rgba(2,6,23,0.5);border:1px solid rgba(255,255,255,0.03)}
-
-    @media (max-width:640px){ body{margin:10px} .item{padding:8px} }
+    
+    body, html {
+      scroll-behavior: smooth !important;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .pts {
+      font-family: "PT Serif", serif;
+    }
+    
+    body {
+      background: radial-gradient(145.05% 100% at 50% 0%, #0e1d56 0%, #0f172a 57.38%, #0f172a 88.16%);
+      color: #ffffff;
+    }
+    
+    header {
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+    
+    header .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    header h1 {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 0;
+      text-decoration: underline;
+    }
+    
+    header nav {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    
+    header nav a {
+      color: #ffffff;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    header nav a:hover {
+      text-decoration: underline;
+    }
+    
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    
+    .hero h2 {
+      font-size: 36px;
+      font-weight: 900;
+      line-height: 1.4;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+    
+    .gradient-text {
+      background: linear-gradient(to right, #ec4899, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero p {
+      color: #d1d5db;
+      font-size: 18px;
+      max-width: 700px;
+      margin: 0 auto 30px;
+    }
+    
+    .controls-section {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 1280px;
+      margin: 20px auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .controls-section label {
+      color: #9ca3af;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    #category-filter, #dark-toggle {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(15, 23, 42, 0.8);
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    #category-filter:hover, #dark-toggle:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(30, 41, 59, 0.8);
+    }
+    
+    #feed {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    
+    .item {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: all 0.3s;
+    }
+    
+    .item:hover {
+      background: rgba(30, 41, 59, 0.7);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .accent {
+      width: 4px;
+      min-height: 100%;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    
+    .content {
+      flex: 1;
+    }
+    
+    .title {
+      font-size: 18px;
+      margin: 0 0 12px 0;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    
+    .title a {
+      color: #ffffff;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    .title a:hover {
+      color: #a8e6cf;
+    }
+    
+    .meta {
+      color: #9ca3af;
+      font-size: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .source {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    #category-stats {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      opacity: 0.9;
+    }
+    
+    #category-stats span {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      color: #9ca3af;
+      font-size: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 60px;
+    }
+    
+    footer a {
+      color: #a8e6cf;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+      .hero h2 {
+        font-size: 24px;
+      }
+      
+      .controls-section {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .controls-section label {
+        width: 100%;
+      }
+      
+      #category-filter, #dark-toggle {
+        width: 100%;
+      }
+      
+      header .container {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      header nav {
+        flex-direction: column;
+        width: 100%;
+      }
+    }
+    
+    /* Dark mode */
+    body.dark {
+      background: radial-gradient(145.05% 100% at 50% 0%, #051425 0%, #0a1428 57.38%, #0a1428 88.16%);
+    }
+    
+    body.dark header {
+      background: rgba(10, 20, 40, 0.9);
+      border-bottom-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    body.dark .item {
+      background: rgba(20, 30, 50, 0.6);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    body.dark .item:hover {
+      background: rgba(20, 30, 50, 0.8);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    
+    body.dark .controls-section {
+      background: rgba(20, 30, 50, 0.6);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    body.dark #category-filter,
+    body.dark #dark-toggle {
+      background: rgba(10, 20, 40, 0.9);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    
+    body.dark #category-filter:hover,
+    body.dark #dark-toggle:hover {
+      background: rgba(20, 30, 50, 0.9);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
   </style>
 </head>
 <body>
-  <h1>Ekoloji Haber Servisi</h1>
+  <header>
+    <div class="container">
+      <h1 class="pts">Ekoloji Haber Servisi</h1>
+      <nav id="top-nav">
+        <a href="#feed" onclick="document.getElementById('dark-toggle').click(); return false;">Karanlık Mod</a>
+      </nav>
+    </div>
+  </header>
+  
+  <section class="hero">
+    <h2 class="pts">Marxist, Ecosocialist ve Ekoloji Perspektifinden <span class="gradient-text">Haber Akışı</span></h2>
+    <p>Emek, çevre ve sosyal adalet odaklı seçilmiş kaynaklar. Türkçe ve İngilizce içerik, günlük güncelleme.</p>
+  </section>
+  
+  <div class="controls-section">
+    <label for="category-filter">Kategori Filtresi:</label>
+    <select id="category-filter"></select>
+    <button id="dark-toggle">🌙 Karanlık Mod</button>
+  </div>
+  
   <div id="feed">Yükleniyor…</div>
+  
+  <footer>
+    <p>© 2026 Ekoloji Haber Servisi • <a href="https://github.com/cemrenayir-hub/rss-bot" target="_blank">GitHub Repository</a></p>
+  </footer>
 
   <script>
-    const REFRESH_MS = 15 * 60 * 1000; // 15 minutes
+    const REFRESH_MS = 15 * 60 * 1000;
     const container = document.getElementById('feed');
-
-    // create filter controls
-    const controls = document.createElement('div');
-    controls.id = 'controls';
-    controls.style.margin = '12px 0';
-    controls.innerHTML = `
-      <label style="font-size:0.95rem;color:var(--muted);">Kategori: </label>
-      <select id="category-filter" style="margin-left:8px;padding:8px;border-radius:8px;border:1px solid rgba(16,24,40,0.05);background:var(--card)"></select>
-      <button id="dark-toggle" style="margin-left:8px;padding:8px;border-radius:8px;border:1px solid rgba(16,24,40,0.05);background:transparent;cursor:pointer">Karanlık</button>
-    `;
-    const header = document.querySelector('h1');
-    header.insertAdjacentElement('afterend', controls);
-
-    // dark mode toggle
-    const darkToggle = controls.querySelector('#dark-toggle');
-    darkToggle.addEventListener('click', ()=>{
+    const darkToggle = document.getElementById('dark-toggle');
+    
+    // Dark mode toggle
+    darkToggle.addEventListener('click', () => {
       document.body.classList.toggle('dark');
-      darkToggle.textContent = document.body.classList.contains('dark') ? 'Açık' : 'Karanlık';
+      darkToggle.textContent = document.body.classList.contains('dark') ? '☀️ Açık Mod' : '🌙 Karanlık Mod';
+      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     });
-
-    function colorForKeyword(k){
-      // deterministic hue from string
-      if(!k) return {accent:'#ddd',bg:'#f6f6f6',text:'#111'};
-      let h=0; for(let i=0;i<k.length;i++){ h = (h*31 + k.charCodeAt(i)) % 360; }
-      const hue = h;
-      const accent = `hsl(${hue} 70% 45%)`;
-      const badgeBg = `hsl(${hue} 90% 94%)`;
-      const badgeText = `hsl(${hue} 60% 25%)`;
-      return {accent,bg:badgeBg,text:badgeText};
+    
+    // Restore theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
+      darkToggle.textContent = '☀️ Açık Mod';
     }
 
-    function renderItems(items, keywordFilter){
+    function colorForKeyword(k) {
+      if (!k) return { accent: '#60a5fa', bg: 'rgba(96, 165, 250, 0.1)', text: '#60a5fa' };
+      let h = 0;
+      for (let i = 0; i < k.length; i++) {
+        h = (h * 31 + k.charCodeAt(i)) % 360;
+      }
+      const hue = h;
+      const accent = `hsl(${hue} 70% 55%)`;
+      const badgeBg = `hsl(${hue} 70% 20%)`;
+      const badgeText = `hsl(${hue} 80% 65%)`;
+      return { accent, bg: badgeBg, text: badgeText };
+    }
+
+    function renderItems(items, keywordFilter) {
       container.innerHTML = '';
       const tagRe = /^\[([^\]]+)\]/;
-      const filtered = keywordFilter ? items.filter(it=>{
+      const filtered = keywordFilter ? items.filter(it => {
         const title = (it.getElementsByTagName('title')[0]?.textContent || '').normalize('NFC');
         const m = title.match(tagRe);
         return m && m[1] === keywordFilter;
       }) : items;
 
-      filtered.forEach(it=>{
-        const title = it.getElementsByTagName('title')[0]?.textContent || 'No title';
+      if (filtered.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px 20px;">Sonuç bulunamadı</p>';
+        return;
+      }
+
+      filtered.forEach(it => {
+        const title = it.getElementsByTagName('title')[0]?.textContent || 'Başlık yok';
         const link = it.getElementsByTagName('link')[0]?.textContent || '#';
         const pub = it.getElementsByTagName('pubDate')[0]?.textContent || '';
-        // derive keyword from title tag like [Keyword]
         const kwMatch = title.match(/^\[([^\]]+)\]/);
         const kw = kwMatch ? kwMatch[1] : '';
         const colors = colorForKeyword(kw);
 
-        const el = document.createElement('div'); el.className='item';
+        const el = document.createElement('div');
+        el.className = 'item';
         el.innerHTML = `
           <div class="accent" aria-hidden style="background:${colors.accent}"></div>
           <div class="content">
-            <div class="meta"><span class="source" style="background:${colors.bg};color:${colors.text}">${kw || ''}</span><span style="margin-left:8px">${pub}</span></div>
-            <h3 class="title"><a href="${link}" target="_blank">${title.replace(/^\[[^\]]+\]\s*/,'')}</a></h3>
+            <div class="meta">
+              <span class="source" style="background:${colors.bg};color:${colors.text}">${kw || 'Haberler'}</span>
+              <span>${pub}</span>
+            </div>
+            <h3 class="title">
+              <a href="${link}" target="_blank" rel="noopener">${title.replace(/^\[[^\]]+\]\s*/, '')}</a>
+            </h3>
           </div>`;
         container.appendChild(el);
       });
-      const now = new Date();
-      const stamp = document.getElementById('last-updated');
-      if (stamp) stamp.textContent = 'Güncellendi: ' + now.toLocaleString();
     }
 
-    function populateFilter(items){
+    function populateFilter(items) {
       const sel = document.getElementById('category-filter');
       sel.innerHTML = '';
-      const optAll = document.createElement('option'); optAll.value = ''; optAll.textContent = 'Tümü'; sel.appendChild(optAll);
+      const optAll = document.createElement('option');
+      optAll.value = '';
+      optAll.textContent = 'Tümü';
+      sel.appendChild(optAll);
+      
       const counts = {};
       const re = /^\[([^\]]+)\]/;
-      items.forEach(it=>{
+      items.forEach(it => {
         const title = it.getElementsByTagName('title')[0]?.textContent || '';
         const m = title.match(re);
-        const k = (m && m[1]) ? m[1] : '(none)';
+        const k = (m && m[1]) ? m[1] : '(diğer)';
         counts[k] = (counts[k] || 0) + 1;
       });
-      Object.keys(counts).sort().forEach(k=>{
-        const o = document.createElement('option'); o.value = k; o.textContent = `${k} (${counts[k]})`; sel.appendChild(o);
+      
+      Object.keys(counts).sort().forEach(k => {
+        const o = document.createElement('option');
+        o.value = k;
+        o.textContent = `${k} (${counts[k]})`;
+        sel.appendChild(o);
       });
 
-      // Populate small stats panel if present
-      const stats = document.getElementById('category-stats');
-      if (stats){
-        stats.innerHTML = '';
-        Object.keys(counts).sort().forEach(k=>{
-          const colors = colorForKeyword(k);
-          const span = document.createElement('span');
-          span.style.display = 'inline-block';
-          span.style.marginRight = '8px';
-          span.style.padding = '4px 8px';
-          span.style.borderRadius = '12px';
-          span.style.background = colors.bg;
-          span.style.color = colors.text;
-          span.textContent = `${k} (${counts[k]})`;
-          stats.appendChild(span);
-        });
-      }
-
-      sel.addEventListener('change',()=>{
+      sel.addEventListener('change', () => {
         const v = sel.value;
         loadAndRender(v);
       });
     }
 
-    async function loadFeedRaw(){
-      const res = await fetch('gunluk_haberler.xml', {cache: 'no-store'});
+    async function loadFeedRaw() {
+      const res = await fetch('gunluk_haberler.xml', { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
-      const doc = new DOMParser().parseFromString(text,'application/xml');
+      const doc = new DOMParser().parseFromString(text, 'application/xml');
       return Array.from(doc.getElementsByTagName('item'));
     }
 
-    async function loadAndRender(filter){
-      try{
+    async function loadAndRender(filter) {
+      try {
         const items = await loadFeedRaw();
-        if(!items.length){ container.textContent = 'No items'; console.warn('feed had no items'); return; }
+        if (!items.length) {
+          container.textContent = 'Haberleri yüklenemedi';
+          console.warn('feed had no items');
+          return;
+        }
         renderItems(items, filter);
-      }catch(e){ console.error('loadAndRender error', e); container.textContent = 'Yükleme hatası: '+e.message; }
+      } catch (e) {
+        console.error('loadAndRender error', e);
+        container.innerHTML = `<p style="text-align: center; color: #f87171; padding: 40px 20px;">Yükleme hatası: ${e.message}</p>`;
+      }
     }
 
-    // Add small stats panel and last-updated element
-    const statsDiv = document.createElement('div');
-    statsDiv.id = 'category-stats';
-    statsDiv.style.margin = '8px 0 6px 0';
-    controls.insertAdjacentElement('afterend', statsDiv);
-
-    const stamp = document.createElement('div');
-    stamp.id = 'last-updated';
-    stamp.className = 'meta';
-    stamp.style.marginBottom = '12px';
-    statsDiv.insertAdjacentElement('afterend', stamp);
-
     // Initial load and periodic refresh
-    loadFeedRaw().then(items=>{ populateFilter(items); renderItems(items); }).catch(e=>{ console.error('initial load failed', e); container.textContent = 'Yükleme hatası: '+e.message });
-    setInterval(()=>{ const sel = document.getElementById('category-filter'); const v = sel ? sel.value : ''; loadAndRender(v).catch(e=>{ console.error('refresh failed', e); container.textContent = 'Yükleme hatası: '+e.message; }); }, REFRESH_MS);
+    loadFeedRaw()
+      .then(items => {
+        populateFilter(items);
+        renderItems(items);
+      })
+      .catch(e => {
+        console.error('initial load failed', e);
+        container.innerHTML = `<p style="text-align: center; color: #f87171; padding: 40px 20px;">Yükleme hatası: ${e.message}</p>`;
+      });
+
+    setInterval(() => {
+      const sel = document.getElementById('category-filter');
+      const v = sel ? sel.value : '';
+      loadAndRender(v).catch(e => {
+        console.error('refresh failed', e);
+      });
+    }, REFRESH_MS);
   </script>
 </body>
 </html>
